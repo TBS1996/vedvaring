@@ -4,7 +4,7 @@ use serde::{Serialize, Deserialize};
 
 
 pub trait Persistence: for<'a> Deserialize<'a> + Serialize  {
-    fn name() -> String;
+    fn name(&self) -> String;
     fn dir() -> PathBuf;
 
     fn path() -> PathBuf {
