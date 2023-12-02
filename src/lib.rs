@@ -23,7 +23,7 @@ pub trait Persist: for<'a> Deserialize<'a> + Serialize {
 
     fn save(&self) {
         std::fs::create_dir_all(Self::dir()).unwrap();
-        let s = toml::to_string_pretty(self).unwrap();
+        let s = toml::to_string(self).unwrap();
         std::fs::write(self.path().as_path(), s).unwrap();
     }
 
@@ -67,7 +67,7 @@ pub trait SingletonPersist: for<'a> Deserialize<'a> + Serialize + Default {
     fn dir_name() -> String;
     fn save(&self) {
         std::fs::create_dir_all(Self::dir()).unwrap();
-        let s = toml::to_string_pretty(self).unwrap();
+        let s = toml::to_string(self).unwrap();
         std::fs::write(Self::path().as_path(), s).unwrap();
     }
 
