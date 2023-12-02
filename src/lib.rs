@@ -3,7 +3,7 @@ use std::fs::read_to_string;
 use serde::{Serialize, Deserialize};
 
 
-pub trait Persistence: for<'a> Deserialize<'a> + Serialize + Default {
+pub trait Persistence: for<'a> Deserialize<'a> + Serialize  {
     fn name() -> String;
     fn dir() -> PathBuf;
 
