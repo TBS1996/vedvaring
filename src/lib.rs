@@ -27,6 +27,17 @@ pub trait Persist: for<'a> Deserialize<'a> + Serialize {
         std::fs::write(self.path().as_path(), s).unwrap();
     }
 
+    fn delete(self) {
+        std::fs::remove_file(self.path()).unwrap();
+    }
+
+    fn open(&self) {
+        std::process::Command::new("open")
+            .arg(self.path())
+            .status()
+            .expect("Failed to open file");
+    }
+
     fn load_all() -> Vec<Self> {
         let mut instances = Vec::new();
         let paths = std::fs::read_dir(Self::dir()).expect("Failed to read directory");
@@ -58,6 +69,17 @@ pub trait SingletonPersist: for<'a> Deserialize<'a> + Serialize + Default {
         std::fs::create_dir_all(Self::dir()).unwrap();
         let s = toml::to_string_pretty(self).unwrap();
         std::fs::write(Self::path().as_path(), s).unwrap();
+    }
+
+    fn delete(self) {
+        std::fs::remove_file(Self::path()).unwrap();
+    }
+
+    fn open() {
+        std::process::Command::new("open")
+            .arg(Self::path())
+            .status()
+            .expect("Failed to open file");
     }
 
     fn dir() -> PathBuf {
