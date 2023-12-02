@@ -17,7 +17,7 @@ pub trait Persistence: for<'a> Deserialize<'a> + Serialize + Default {
         let path = Self::path();
 
         if !path.exists() {
-            Self::default().save();
+            panic!("file not found: {}", path.display());
         }
 
         let content = read_to_string(path).unwrap();
