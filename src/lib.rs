@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::fs::{read_to_string, File};
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::PathBuf;
 
 pub trait Persist: for<'a> Deserialize<'a> + Serialize {
@@ -19,6 +19,12 @@ pub trait Persist: for<'a> Deserialize<'a> + Serialize {
         let mut x = Self::dir().join(self.name());
         x.set_extension("toml");
         x
+    }
+
+    fn save(&self) {
+        std::fs::create_dir_all(Self::dir()).unwrap();
+        let s = toml::to_string_pretty(self).unwrap();
+        std::fs::write(self.path().as_path(), s).unwrap();
     }
 
     fn load_all() -> Vec<Self> {
@@ -41,20 +47,26 @@ pub trait Persist: for<'a> Deserialize<'a> + Serialize {
 
         instances
     }
-
-    fn save(&self) {
-        let serialized = toml::to_string(self).expect("Failed to serialize");
-        let mut file = File::create(self.path()).expect("Failed to create file");
-        file.write_all(serialized.as_bytes())
-            .expect("Failed to write to file");
-    }
 }
 
 /// For singleton stuff, like config files, they need to implement default so
 /// a new one is created at first load.
 pub trait SingletonPersist: for<'a> Deserialize<'a> + Serialize + Default {
     fn name() -> String;
-    fn dir() -> PathBuf;
+    fn dir_name() -> String;
+    fn save(&self) {
+        std::fs::create_dir_all(Self::dir()).unwrap();
+        let s = toml::to_string_pretty(self).unwrap();
+        std::fs::write(Self::path().as_path(), s).unwrap();
+    }
+
+    fn dir() -> PathBuf {
+        let p = home::home_dir()
+            .unwrap()
+            .join(format!(".local/share/{}", Self::dir_name()));
+        std::fs::create_dir_all(p.as_path()).unwrap();
+        p
+    }
 
     fn path() -> PathBuf {
         let mut x = Self::dir().join(Self::name());
@@ -64,19 +76,10 @@ pub trait SingletonPersist: for<'a> Deserialize<'a> + Serialize + Default {
 
     fn load() -> Self {
         let path = Self::path();
-
         if !path.exists() {
             Self::default().save();
         }
-
         let content = read_to_string(path).unwrap();
-
         toml::from_str(content.as_str()).unwrap()
-    }
-    fn save(&self) {
-        let s = toml::to_string_pretty(self).unwrap();
-        std::fs::create_dir_all(Self::dir()).unwrap();
-        let p = Self::path();
-        std::fs::write(p.as_path(), s).unwrap();
     }
 }
