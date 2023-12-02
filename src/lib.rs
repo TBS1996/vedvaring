@@ -5,7 +5,15 @@ use std::path::PathBuf;
 
 pub trait Persist: for<'a> Deserialize<'a> + Serialize {
     fn name(&self) -> String;
-    fn dir() -> PathBuf;
+    fn dir_name() -> String;
+
+    fn dir() -> PathBuf {
+        let p = home::home_dir()
+            .unwrap()
+            .join(format!(".local/share/{}", Self::dir_name()));
+        std::fs::create_dir_all(p.as_path()).unwrap();
+        p
+    }
 
     fn path(&self) -> PathBuf {
         let mut x = Self::dir().join(self.name());
