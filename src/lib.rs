@@ -3,9 +3,12 @@ use std::fs::{read_to_string, File};
 use std::io::Read;
 use std::path::PathBuf;
 
-pub trait Persist: for<'a> Deserialize<'a> + Serialize {
+pub trait Persist: for<'a> Deserialize<'a> + Serialize + std::fmt::Debug {
+    /// Needs to be unique
     fn name(&self) -> String;
-    fn dir_name() -> String;
+    fn dir_name() -> String {
+        std::env::var("CARGO_PKG_NAME").unwrap()
+    }
 
     fn dir() -> PathBuf {
         let p = home::home_dir()
@@ -64,7 +67,9 @@ pub trait Persist: for<'a> Deserialize<'a> + Serialize {
 /// a new one is created at first load.
 pub trait SingletonPersist: for<'a> Deserialize<'a> + Serialize + Default {
     fn name() -> String;
-    fn dir_name() -> String;
+    fn dir_name() -> String {
+        env!("CARGO_PKG_NAME").into()
+    }
     fn save(&self) {
         std::fs::create_dir_all(Self::dir()).unwrap();
         let s = toml::to_string(self).unwrap();
